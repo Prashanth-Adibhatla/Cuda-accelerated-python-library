@@ -85,34 +85,34 @@ def run_cuda_raytracer():
     # -------------------------------------------------------------
     # Warm-up run for GPU initialization
     _ = raytracer_cuda.render_scene(
-        width=w,
-        height=h,
-        depth_max=depth_max,
-        ambient=ambient,
-        specular_k=specular_k,
-        camera_pos=O,
-        light_pos=L,
-        light_col=color_light,
-        screen_bounds=list(S),
-        spheres=spheres,
-        planes=planes,
+        w,
+        h,
+        depth_max,
+        ambient,
+        specular_k,
+        O,
+        L,
+        color_light,
+        list(S),
+        spheres,
+        planes,
     )
 
     # Timed benchmark run
     start_time = time.perf_counter()
 
     img = raytracer_cuda.render_scene(
-        width=w,
-        height=h,
-        depth_max=depth_max,
-        ambient=ambient,
-        specular_k=specular_k,
-        camera_pos=O,
-        light_pos=L,
-        light_col=color_light,
-        screen_bounds=list(S),
-        spheres=spheres,
-        planes=planes,
+        w,
+        h,
+        depth_max,
+        ambient,
+        specular_k,
+        O,
+        L,
+        color_light,
+        list(S),
+        spheres,
+        planes,
     )
 
     render_time = time.perf_counter() - start_time
