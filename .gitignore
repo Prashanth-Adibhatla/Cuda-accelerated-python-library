@@ -1,0 +1,15 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Large benchmark dataset files (>100MB cannot be pushed to GitHub)
+datasets/*
+!datasets/README.md
+!datasets/.gitkeep
+
+# Temporary / intermediate build files
+*.obj
+*.lib
+*.exp
+build/temp.*

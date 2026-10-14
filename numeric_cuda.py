@@ -21,102 +21,130 @@ from raytracer_cuda import (
 # Elementwise Arithmetic, Power & Comparisons
 # -----------------------------------------------------------------------------
 
+def _apply_1d(func, x: np.ndarray, *args) -> np.ndarray:
+    arr = np.ascontiguousarray(x, dtype=np.float32)
+    orig_shape = arr.shape
+    if arr.ndim > 1:
+        res = func(arr.reshape(-1), *args)
+        return np.asarray(res).reshape(orig_shape)
+    return func(arr, *args)
+
+def _apply_bin_1d(func, a: np.ndarray, b: np.ndarray) -> np.ndarray:
+    arr_a = np.ascontiguousarray(a, dtype=np.float32)
+    arr_b = np.ascontiguousarray(b, dtype=np.float32)
+    orig_shape = arr_a.shape
+    if arr_a.shape != arr_b.shape:
+        arr_a, arr_b = np.broadcast_arrays(arr_a, arr_b)
+        orig_shape = arr_a.shape
+    if arr_a.ndim > 1:
+        res = func(arr_a.reshape(-1), arr_b.reshape(-1))
+        return np.asarray(res).reshape(orig_shape)
+    return func(arr_a, arr_b)
+
 def add(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """Elementwise addition a + b on CUDA."""
-    return _C.add_f32(np.ascontiguousarray(a, dtype=np.float32),
-                      np.ascontiguousarray(b, dtype=np.float32))
+    return _apply_bin_1d(_C.add_f32, a, b)
 
 def subtract(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """Elementwise subtraction a - b on CUDA."""
-    return _C.subtract_f32(np.ascontiguousarray(a, dtype=np.float32),
-                           np.ascontiguousarray(b, dtype=np.float32))
+    return _apply_bin_1d(_C.subtract_f32, a, b)
 
 def multiply(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """Elementwise multiplication a * b on CUDA."""
-    return _C.multiply_f32(np.ascontiguousarray(a, dtype=np.float32),
-                           np.ascontiguousarray(b, dtype=np.float32))
+    return _apply_bin_1d(_C.multiply_f32, a, b)
 
 def divide(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """Elementwise division a / b on CUDA."""
-    return _C.divide_f32(np.ascontiguousarray(a, dtype=np.float32),
-                         np.ascontiguousarray(b, dtype=np.float32))
+    return _apply_bin_1d(_C.divide_f32, a, b)
 
 def maximum(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """Elementwise maximum on CUDA."""
-    return _C.maximum_f32(np.ascontiguousarray(a, dtype=np.float32),
-                          np.ascontiguousarray(b, dtype=np.float32))
+    return _apply_bin_1d(_C.maximum_f32, a, b)
 
 def minimum(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """Elementwise minimum on CUDA."""
-    return _C.minimum_f32(np.ascontiguousarray(a, dtype=np.float32),
-                          np.ascontiguousarray(b, dtype=np.float32))
+    return _apply_bin_1d(_C.minimum_f32, a, b)
 
 def power(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """Elementwise power a ** b on CUDA."""
-    return _C.power_f32(np.ascontiguousarray(a, dtype=np.float32),
-                        np.ascontiguousarray(b, dtype=np.float32))
+    return _apply_bin_1d(_C.power_f32, a, b)
 
 def greater(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """Elementwise greater comparison a > b on CUDA."""
-    return _C.greater_f32(np.ascontiguousarray(a, dtype=np.float32),
-                          np.ascontiguousarray(b, dtype=np.float32))
+    return _apply_bin_1d(_C.greater_f32, a, b)
 
 def less(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """Elementwise less comparison a < b on CUDA."""
-    return _C.less_f32(np.ascontiguousarray(a, dtype=np.float32),
-                       np.ascontiguousarray(b, dtype=np.float32))
+    return _apply_bin_1d(_C.less_f32, a, b)
 
 def equal(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """Elementwise equality comparison a == b on CUDA."""
-    return _C.equal_f32(np.ascontiguousarray(a, dtype=np.float32),
-                        np.ascontiguousarray(b, dtype=np.float32))
+    return _apply_bin_1d(_C.equal_f32, a, b)
 
 def logical_and(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """Elementwise logical AND on CUDA."""
-    return _C.logical_and_f32(np.ascontiguousarray(a, dtype=bool),
-                              np.ascontiguousarray(b, dtype=bool))
+    a_b = np.ascontiguousarray(a, dtype=bool)
+    b_b = np.ascontiguousarray(b, dtype=bool)
+    orig_shape = a_b.shape
+    if a_b.ndim > 1:
+        res = _C.logical_and_f32(a_b.reshape(-1), b_b.reshape(-1))
+        return np.asarray(res).reshape(orig_shape)
+    return _C.logical_and_f32(a_b, b_b)
 
 def logical_or(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """Elementwise logical OR on CUDA."""
-    return _C.logical_or_f32(np.ascontiguousarray(a, dtype=bool),
-                             np.ascontiguousarray(b, dtype=bool))
+    a_b = np.ascontiguousarray(a, dtype=bool)
+    b_b = np.ascontiguousarray(b, dtype=bool)
+    orig_shape = a_b.shape
+    if a_b.ndim > 1:
+        res = _C.logical_or_f32(a_b.reshape(-1), b_b.reshape(-1))
+        return np.asarray(res).reshape(orig_shape)
+    return _C.logical_or_f32(a_b, b_b)
 
 def logical_not(a: np.ndarray) -> np.ndarray:
     """Elementwise logical NOT on CUDA."""
-    return _C.logical_not_f32(np.ascontiguousarray(a, dtype=bool))
+    a_b = np.ascontiguousarray(a, dtype=bool)
+    orig_shape = a_b.shape
+    if a_b.ndim > 1:
+        res = _C.logical_not_f32(a_b.reshape(-1))
+        return np.asarray(res).reshape(orig_shape)
+    return _C.logical_not_f32(a_b)
 
-def where(cond: np.ndarray, a: np.ndarray, b: np.ndarray) -> np.ndarray:
-    """Elementwise where(cond, a, b) on CUDA."""
-    return _C.where_f32(np.ascontiguousarray(cond, dtype=bool),
-                        np.ascontiguousarray(a, dtype=np.float32),
-                        np.ascontiguousarray(b, dtype=np.float32))
+def where(cond: np.ndarray, a: Union[np.ndarray, float], b: Union[np.ndarray, float]) -> np.ndarray:
+    """Elementwise where(cond, a, b) on CUDA with scalar broadcasting."""
+    cond_arr = np.ascontiguousarray(cond, dtype=bool)
+    orig_shape = cond_arr.shape
+    a_arr = np.ascontiguousarray(np.broadcast_to(a, orig_shape), dtype=np.float32).reshape(-1)
+    b_arr = np.ascontiguousarray(np.broadcast_to(b, orig_shape), dtype=np.float32).reshape(-1)
+    res = _C.where_f32(cond_arr.reshape(-1), a_arr, b_arr)
+    return np.asarray(res).reshape(orig_shape)
 
 # -----------------------------------------------------------------------------
 # Elementwise Math & Special Functions
 # -----------------------------------------------------------------------------
 
-def exp(x: np.ndarray) -> np.ndarray: return _C.exp_f32(np.ascontiguousarray(x, dtype=np.float32))
-def log(x: np.ndarray) -> np.ndarray: return _C.log_f32(np.ascontiguousarray(x, dtype=np.float32))
-def log1p(x: np.ndarray) -> np.ndarray: return _C.log1p_f32(np.ascontiguousarray(x, dtype=np.float32))
-def expm1(x: np.ndarray) -> np.ndarray: return _C.expm1_f32(np.ascontiguousarray(x, dtype=np.float32))
-def sqrt(x: np.ndarray) -> np.ndarray: return _C.sqrt_f32(np.ascontiguousarray(x, dtype=np.float32))
-def sin(x: np.ndarray) -> np.ndarray: return _C.sin_f32(np.ascontiguousarray(x, dtype=np.float32))
-def cos(x: np.ndarray) -> np.ndarray: return _C.cos_f32(np.ascontiguousarray(x, dtype=np.float32))
-def tan(x: np.ndarray) -> np.ndarray: return _C.tan_f32(np.ascontiguousarray(x, dtype=np.float32))
-def tanh(x: np.ndarray) -> np.ndarray: return _C.tanh_f32(np.ascontiguousarray(x, dtype=np.float32))
-def floor(x: np.ndarray) -> np.ndarray: return _C.floor_f32(np.ascontiguousarray(x, dtype=np.float32))
-def ceil(x: np.ndarray) -> np.ndarray: return _C.ceil_f32(np.ascontiguousarray(x, dtype=np.float32))
-def abs(x: np.ndarray) -> np.ndarray: return _C.abs_f32(np.ascontiguousarray(x, dtype=np.float32))
-def negative(x: np.ndarray) -> np.ndarray: return _C.negative_f32(np.ascontiguousarray(x, dtype=np.float32))
-def square(x: np.ndarray) -> np.ndarray: return _C.square_f32(np.ascontiguousarray(x, dtype=np.float32))
-def sign(x: np.ndarray) -> np.ndarray: return _C.sign_f32(np.ascontiguousarray(x, dtype=np.float32))
+def exp(x: np.ndarray) -> np.ndarray: return _apply_1d(_C.exp_f32, x)
+def log(x: np.ndarray) -> np.ndarray: return _apply_1d(_C.log_f32, x)
+def log1p(x: np.ndarray) -> np.ndarray: return _apply_1d(_C.log1p_f32, x)
+def expm1(x: np.ndarray) -> np.ndarray: return _apply_1d(_C.expm1_f32, x)
+def sqrt(x: np.ndarray) -> np.ndarray: return _apply_1d(_C.sqrt_f32, x)
+def sin(x: np.ndarray) -> np.ndarray: return _apply_1d(_C.sin_f32, x)
+def cos(x: np.ndarray) -> np.ndarray: return _apply_1d(_C.cos_f32, x)
+def tan(x: np.ndarray) -> np.ndarray: return _apply_1d(_C.tan_f32, x)
+def tanh(x: np.ndarray) -> np.ndarray: return _apply_1d(_C.tanh_f32, x)
+def floor(x: np.ndarray) -> np.ndarray: return _apply_1d(_C.floor_f32, x)
+def ceil(x: np.ndarray) -> np.ndarray: return _apply_1d(_C.ceil_f32, x)
+def abs(x: np.ndarray) -> np.ndarray: return _apply_1d(_C.abs_f32, x)
+def negative(x: np.ndarray) -> np.ndarray: return _apply_1d(_C.negative_f32, x)
+def square(x: np.ndarray) -> np.ndarray: return _apply_1d(_C.square_f32, x)
+def sign(x: np.ndarray) -> np.ndarray: return _apply_1d(_C.sign_f32, x)
 def clip(x: np.ndarray, lo: float, hi: float) -> np.ndarray:
-    return _C.clip_f32(np.ascontiguousarray(x, dtype=np.float32), float(lo), float(hi))
+    return _apply_1d(_C.clip_f32, x, float(lo), float(hi))
 
-def erf(x: np.ndarray) -> np.ndarray: return _C.erf_f32(np.ascontiguousarray(x, dtype=np.float32))
-def erfc(x: np.ndarray) -> np.ndarray: return _C.erfc_f32(np.ascontiguousarray(x, dtype=np.float32))
-def gamma(x: np.ndarray) -> np.ndarray: return _C.gamma_f32(np.ascontiguousarray(x, dtype=np.float32))
-def lgamma(x: np.ndarray) -> np.ndarray: return _C.lgamma_f32(np.ascontiguousarray(x, dtype=np.float32))
+def erf(x: np.ndarray) -> np.ndarray: return _apply_1d(_C.erf_f32, x)
+def erfc(x: np.ndarray) -> np.ndarray: return _apply_1d(_C.erfc_f32, x)
+def gamma(x: np.ndarray) -> np.ndarray: return _apply_1d(_C.gamma_f32, x)
+def lgamma(x: np.ndarray) -> np.ndarray: return _apply_1d(_C.lgamma_f32, x)
 
 # -----------------------------------------------------------------------------
 # ML Activations & Loss Functions
@@ -124,23 +152,23 @@ def lgamma(x: np.ndarray) -> np.ndarray: return _C.lgamma_f32(np.ascontiguousarr
 
 def sigmoid(x: np.ndarray) -> np.ndarray:
     """Sigmoid activation function 1 / (1 + exp(-x)) on CUDA."""
-    return _C.sigmoid_f32(np.ascontiguousarray(x, dtype=np.float32))
+    return _apply_1d(_C.sigmoid_f32, x)
 
 def relu(x: np.ndarray) -> np.ndarray:
     """Rectified Linear Unit max(0, x) on CUDA."""
-    return _C.relu_f32(np.ascontiguousarray(x, dtype=np.float32))
+    return _apply_1d(_C.relu_f32, x)
 
 def leaky_relu(x: np.ndarray, alpha: float = 0.01) -> np.ndarray:
     """Leaky ReLU activation on CUDA."""
-    return _C.leaky_relu_f32(np.ascontiguousarray(x, dtype=np.float32), float(alpha))
+    return _apply_1d(_C.leaky_relu_f32, x, float(alpha))
 
 def gelu(x: np.ndarray) -> np.ndarray:
     """Gaussian Error Linear Unit (GELU) activation on CUDA."""
-    return _C.gelu_f32(np.ascontiguousarray(x, dtype=np.float32))
+    return _apply_1d(_C.gelu_f32, x)
 
 def silu(x: np.ndarray) -> np.ndarray:
     """Sigmoid Linear Unit (SiLU / Swish) activation on CUDA."""
-    return _C.silu_f32(np.ascontiguousarray(x, dtype=np.float32))
+    return _apply_1d(_C.silu_f32, x)
 
 def softmax(x: np.ndarray, axis: int = -1) -> np.ndarray:
     """Softmax along axis (default last axis) on CUDA with numerically stable max subtraction."""
@@ -200,6 +228,11 @@ def mse_loss(y_pred: np.ndarray, y_true: np.ndarray) -> float:
         np.ascontiguousarray(y_pred, dtype=np.float32).reshape(-1),
         np.ascontiguousarray(y_true, dtype=np.float32).reshape(-1),
     )
+
+# Aliases for compatibility
+mean_squared_error = mse_loss
+cuda_mse_loss_f32 = mse_loss
+bce_loss = binary_cross_entropy
 
 # -----------------------------------------------------------------------------
 # Reductions & Order Statistics
@@ -332,6 +365,20 @@ def bincount_u8_256(x: np.ndarray) -> np.ndarray:
 def correlate2d_5x5(image: np.ndarray, filter_5x5: np.ndarray) -> np.ndarray:
     return _C.correlate2d_5x5_f32(np.ascontiguousarray(image, dtype=np.float32),
                                  np.ascontiguousarray(filter_5x5, dtype=np.float32))
+
+correlate2d = correlate2d_5x5
+
+def euclidean_distances(X: np.ndarray, Y: np.ndarray) -> np.ndarray:
+    """Pairwise Euclidean distances on CUDA."""
+    return cdist(X, Y, metric="euclidean")
+
+def cosine_distances(X: np.ndarray, Y: np.ndarray) -> np.ndarray:
+    """Pairwise Cosine distances on CUDA."""
+    return cdist(X, Y, metric="cosine")
+
+def manhattan_distances(X: np.ndarray, Y: np.ndarray) -> np.ndarray:
+    """Pairwise Manhattan (L1 / cityblock) distances on CUDA."""
+    return cdist(X, Y, metric="cityblock")
 
 # -----------------------------------------------------------------------------
 # High-Level Machine Learning Estimators (Scikit-Learn Compatible)
